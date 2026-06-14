@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: telemetry-collector
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  config:
+    import: optional:file:.env[.properties]
+
+server:
+  port: 8080
+
+mqtt:
+  host: ${MQTT_HOST}
+  port: ${MQTT_PORT}
+  topic: ${MQTT_TOPIC}
+  username: ${MQTT_USERNAME}
+  password: ${MQTT_PASSWORD}
+
+kafka:
+  topic:
+    raw: ${KAFKA_TOPIC_RAW}
+    dlq: ${KAFKA_TOPIC_DLQ}
+
+logging:
+  level:
+    org.apache.kafka: OFF
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health"
+  endpoint:
+    health:
+      show-details: always
+
+webhook:
+  url: ${WEBHOOK_URL}
