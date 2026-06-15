@@ -1,210 +1,117 @@
-\# Pipeline Guard
+# Pipeline Guard
 
+Pipeline Guard is an event-driven IoT telemetry processing platform built with Spring Boot, Apache Kafka, Docker, and AWS.
 
-
-Pipeline Guard is an IoT telemetry processing platform built with Spring Boot, Apache Kafka, Docker, and AWS.
-
-
-
-\## Overview
-
-
+## Overview
 
 The system collects telemetry data from IoT devices through MQTT, validates incoming messages, and publishes them to Kafka for downstream processing.
 
-
-
-Current architecture:
-
-
+### Current Architecture
 
 ```text
-
 Device
-
-&#x20; ↓
-
+  ↓
 EMQX Cloud
-
-&#x20; ↓
-
+  ↓
 Telemetry Collector
-
-&#x20; ↓
-
+  ↓
 Apache Kafka
-
 ```
 
+## Tech Stack
 
+* Java 17
+* Spring Boot
+* Apache Kafka (KRaft Mode)
+* MQTT (EMQX Cloud)
+* Docker
+* Docker Compose
+* AWS EC2
+* GitHub
 
-\## Tech Stack
+## Components
 
-
-
-\* Java 17
-
-\* Spring Boot
-
-\* Apache Kafka (KRaft Mode)
-
-\* MQTT (EMQX Cloud)
-
-\* Docker
-
-\* Docker Compose
-
-\* AWS EC2
-
-
-
-\## Components
-
-
-
-\### Telemetry Collector
-
-
+### Telemetry Collector
 
 Responsibilities:
 
+* Subscribe to MQTT topics
+* Receive telemetry data from devices
+* Validate incoming telemetry payloads
+* Publish raw telemetry events to Kafka
 
-
-\* Subscribe to MQTT topics
-
-\* Receive telemetry from devices
-
-\* Validate incoming messages
-
-\* Publish raw telemetry events to Kafka
-
-
-
-\### Kafka
-
-
+### Apache Kafka
 
 Responsibilities:
 
+* Store telemetry events
+* Decouple producers and consumers
+* Provide reliable event streaming for downstream services
 
-
-\* Store telemetry events
-
-\* Decouple producers and consumers
-
-\* Serve as the event backbone for the platform
-
-
-
-\## Deployment
-
-
+## Deployment
 
 Current deployment environment:
 
+* AWS EC2 (Ubuntu)
+* Docker Compose
 
+Running services:
 
-\* AWS EC2 (Ubuntu)
+* telemetry-collector
+* kafka
 
-\* Docker Compose
+## Progress
 
+### Completed
 
+* MQTT integration with EMQX Cloud
+* Telemetry ingestion pipeline
+* Kafka producer integration
+* Docker containerization
+* Docker Compose orchestration
+* EC2 deployment
+* End-to-end telemetry validation
 
-Services currently deployed:
+### In Progress
 
+* Telemetry Aggregator Service
 
+### Planned
 
-\* telemetry-collector
+* PostgreSQL integration
+* Incident Service
+* Alerting workflow
+* Monitoring and observability
 
-\* kafka
-
-
-
-\## Current Progress
-
-
-
-\### Completed
-
-
-
-\* MQTT integration with EMQX Cloud
-
-\* Telemetry ingestion pipeline
-
-\* Kafka producer integration
-
-\* Docker containerization
-
-\* Docker Compose orchestration
-
-\* EC2 deployment
-
-\* End-to-end telemetry validation
-
-
-
-\### In Progress
-
-
-
-\* Telemetry Aggregator Service
-
-
-
-\### Planned
-
-
-
-\* PostgreSQL integration
-
-\* Incident Service
-
-\* Alerting workflow
-
-\* Monitoring and observability
-
-
-
-\## Future Architecture
-
-
+## Future Architecture
 
 ```text
-
 Device
-
-&#x20; ↓
-
+  ↓
 EMQX Cloud
-
-&#x20; ↓
-
+  ↓
 Telemetry Collector
-
-&#x20; ↓
-
+  ↓
 Apache Kafka
-
-&#x20; ↓
-
+  ↓
 Telemetry Aggregator
-
-&#x20; ↓
-
+  ↓
 PostgreSQL
-
-&#x20; ↓
-
+  ↓
 Incident Service
-
 ```
 
+## Learning Objectives
 
+This project is used to explore:
 
-\## Author
+* Event-driven architecture
+* Distributed systems
+* Apache Kafka
+* Spring Boot microservices
+* Docker-based deployment
+* Cloud infrastructure on AWS
 
+## Author
 
-
-Personal backend engineering learning project focused on distributed systems, event-driven architecture, and cloud deployment.
-
+Personal backend engineering project focused on building production-style data pipelines and cloud-native services.
