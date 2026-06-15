@@ -15,10 +15,20 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
   collector:
     build: ./telemetry-collector
     env_file:
       - ./telemetry-collector/.env
+    depends_on:
+      - kafka
+
+  aggregator:
+    build: ./telemetry-aggregator
+    env_file:
+      - ./telemetry-aggregator/.env
     depends_on:
       - kafka
