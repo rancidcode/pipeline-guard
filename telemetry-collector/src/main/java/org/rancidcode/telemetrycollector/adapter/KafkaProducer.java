@@ -32,14 +32,26 @@ public class KafkaProducer {
 
         if (message.has("errorMessage")) {
             send(dlqTopic, message.toString());
-            log.info("Topic: {}, Sent message: {}", dlqTopic, message);
+            //  log.info("Topic: {}, Sent message: {}", dlqTopic, message);
         } else {
             send(rawTopic, message.toString());
-            log.info("Topic: {}, Sent message: {}", rawTopic, message);
+            //log.info("Topic: {}, Sent message: {}", rawTopic, message);
         }
     }
 
     public void send(String topic, String message) {
-        kafkaTemplate.send(topic, message);
+        kafkaTemplate.send(topic, message).whenComplete((result, ex) -> {
+            if (ex != null) {
+                log.error("Failed to send message to topic {}", topic, ex);
+            } else {
+                log.info(
+                        "Message sent to topic={}, partition={}, offset={}, message {}",
+                        topic,
+                        result.getRecordMetadata().partition(),
+                        result.getRecordMetadata().offset(),
+                        message
+                );
+            }
+        });
     }
 }
