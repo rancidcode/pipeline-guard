@@ -4,9 +4,9 @@ Pipeline Guard is an event-driven IoT telemetry processing platform built with S
 
 ## Overview
 
-The system collects telemetry data from IoT devices through MQTT, validates incoming messages, and publishes them to Kafka for downstream processing.
+The system collects telemetry data from IoT devices through MQTT, validates incoming messages, and processes telemetry streams using Apache Kafka and Kafka Streams.
 
-### Current Architecture
+## Current Architecture
 
 ```text
 Device
@@ -15,14 +15,19 @@ EMQX Cloud
   ↓
 Telemetry Collector
   ↓
-Apache Kafka
+Apache Kafka (telemetry.raw)
+  ↓
+Telemetry Aggregator (Kafka Streams)
+  ├── telemetry.avg.1m
+  └── telemetry.avg.2m
 ```
 
 ## Tech Stack
 
 * Java 17
 * Spring Boot
-* Apache Kafka (KRaft Mode)
+* Apache Kafka 4.0 (KRaft Mode)
+* Kafka Streams
 * MQTT (EMQX Cloud)
 * Docker
 * Docker Compose
@@ -46,7 +51,19 @@ Responsibilities:
 
 * Store telemetry events
 * Decouple producers and consumers
-* Provide reliable event streaming for downstream services
+* Provide reliable event streaming between services
+
+### Telemetry Aggregator
+
+Responsibilities:
+
+* Consume telemetry events from `telemetry.raw`
+* Perform windowed aggregations using Kafka Streams
+* Calculate averages and counts
+* Publish aggregated results to:
+
+  * `telemetry.avg.1m`
+  * `telemetry.avg.2m`
 
 ## Deployment
 
@@ -58,6 +75,7 @@ Current deployment environment:
 Running services:
 
 * telemetry-collector
+* telemetry-aggregator
 * kafka
 
 ## Progress
@@ -67,21 +85,28 @@ Running services:
 * MQTT integration with EMQX Cloud
 * Telemetry ingestion pipeline
 * Kafka producer integration
+* Kafka consumer integration
+* Kafka Streams integration
+* 1-minute window aggregation
+* 2-minute window aggregation
+* RocksDB state stores
 * Docker containerization
 * Docker Compose orchestration
+* Kafka 4.0 KRaft deployment
 * EC2 deployment
-* End-to-end telemetry validation
+* End-to-end telemetry processing validation
 
 ### In Progress
 
-* Telemetry Aggregator Service
+* PostgreSQL integration
+* Aggregated data persistence
 
 ### Planned
 
-* PostgreSQL integration
 * Incident Service
 * Alerting workflow
 * Monitoring and observability
+* REST API for querying aggregated metrics
 
 ## Future Architecture
 
@@ -107,7 +132,8 @@ This project is used to explore:
 
 * Event-driven architecture
 * Distributed systems
-* Apache Kafka
+* Apache Kafka & Kafka Streams
+* Stateful stream processing
 * Spring Boot microservices
 * Docker-based deployment
 * Cloud infrastructure on AWS
