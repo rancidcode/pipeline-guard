@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: incident-engine
+
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    streams:
+      properties:
+        auto.offset.reset: earliest
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    incident:
+      url: jdbc:postgresql://localhost:${DB_PORT}/${DB_INCIDENT_NAME}
+      username: ${DB_USER}
+      password: ${DB_PASS}
+      driver-class-name: org.postgresql.Driver
+    telemetry:
+      url: jdbc:postgresql://localhost:${DB_PORT}/${DB_TELEMETRY_NAME}
+      username: ${DB_USER}
+      password: ${DB_PASS}
+      driver-class-name: org.postgresql.Driver
+
+server:
+  port: 8082
+
+kafka:
+  topic:
+    1m: ${KAFKA_TOPIC_1M}
+    5m: ${KAFKA_TOPIC_5M}
+    dlq: ${KAFKA_TOPIC_DLQ}
+    raw: ${KAFKA_TOPIC_RAW}
+  group:
+    raw: ${KAFKA_GROUP_RAW}
+    dlq: ${KAFKA_GROUP_DLQ}
+    avg: ${KAFKA_GROUP_AVG}
+
+logging:
+  level:
+    org.apache.kafka: OFF
+
+schedulers:
+  incidentChecker:
+    cron: ${INCIDENT_CRON}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health"
+  endpoint:
+    health:
+      show-details: always

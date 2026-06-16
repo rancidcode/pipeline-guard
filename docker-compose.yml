@@ -32,3 +32,10 @@ services:
       - ./telemetry-aggregator/.env
     depends_on:
       - kafka
+
+  incident-engine:
+    build: ./incident-engine
+    env_file:
+      - ./incident-engine/.env
+    depends_on:
+      - kafka
