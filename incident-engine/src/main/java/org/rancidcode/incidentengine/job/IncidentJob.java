@@ -36,28 +36,30 @@ public class IncidentJob {
     public void scheduleIncidentChecker() {
         log.info("schedule");
 
-        String errorType = "";
+        boolean dataStopped = dataTask.dataStopped(jdbcIncident);
+        boolean isLastIncidentOpen = dataTask.isLastIncidentOpen(jdbcIncident);
 
-        openIncident(errorType);
-        //if no issue, but last issue is open, then need to close
-        closeIncident(errorType);
-    }
-
-    private void openIncident(String errorType) {
-        if (dataTask.dataStopped(jdbcIncident) && !dataTask.isLastIncidentOpen(jdbcIncident)) {
-
-            if (!kafkaConnectivityChecker.isKafkaReachable()) errorType = IncidentType.KAFKA_DISCONNECTED.name();
-            else if (!dataTask.isMqttConnnected(jdbcTelemetry)) errorType = IncidentType.MQTT_DISCONNECTED.name();
-            else if (dataTask.dataDlq(jdbcTelemetry)) errorType = IncidentType.INVALID_DATA.name();
-            else errorType = IncidentType.DEVICE_OFFLINE.name();
-            //not yet completed for DEVICE_ERROR when to write
-
-            insertIncident(errorType, "", "OPEN", Instant.now(), null);
+        if (dataStopped && !isLastIncidentOpen) {
+            openIncident();
+        } else if (!dataStopped && isLastIncidentOpen) {
+            closeIncident();
         }
     }
 
-    private void closeIncident(String errorType) {
-        if (errorType.isEmpty()) dataTask.closeIncident(jdbcIncident);
+    private void openIncident() {
+        String errorType = "";
+
+        if (!kafkaConnectivityChecker.isKafkaReachable()) errorType = IncidentType.KAFKA_DISCONNECTED.name();
+        else if (!dataTask.isMqttConnnected(jdbcTelemetry)) errorType = IncidentType.MQTT_DISCONNECTED.name();
+        else if (dataTask.dataDlq(jdbcTelemetry)) errorType = IncidentType.INVALID_DATA.name();
+        else errorType = IncidentType.DEVICE_OFFLINE.name();
+        //not yet completed for DEVICE_ERROR when to write
+
+        insertIncident(errorType, "", "OPEN", Instant.now(), null);
+    }
+
+    private void closeIncident() {
+        dataTask.closeIncident(jdbcIncident);
     }
 
     private void insertIncident(String errorType, String source, String status, Instant open, Instant closed) {
