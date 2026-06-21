@@ -2,7 +2,9 @@ package org.rancidcode.incidentengine.adapter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.rancidcode.incidentengine.domain.DataTask;
+import org.rancidcode.incidentengine.dto.Dlq;
 import org.rancidcode.incidentengine.dto.Telemetry;
+import org.rancidcode.incidentengine.infra.db.DlqTable;
 import org.rancidcode.incidentengine.infra.db.TelemetryTable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,6 +41,8 @@ public class KafkaConsumer {
     @KafkaListener(topics = "${kafka.topic.dlq}", groupId = "${kafka.group.dlq}")
     public void processDlq(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         log.info("Topic : {}, message : {}", topic, message);
+
+        dataTask.insertData(jdbcTemplate, DlqTable.TABLE, extractDlq(message));
     }
 
     @KafkaListener(topics = "${kafka.topic.raw}", groupId = "${kafka.group.raw}")
@@ -49,15 +53,12 @@ public class KafkaConsumer {
     }
 
     private Map<String, Object> extractTelemetry(String rawMessage) {
-        //id | device_id | temperature | heat_index | humidity | event_time
-        ObjectNode objectNode = null;
-        Map<String, Object> values = null;
+        // id | device_id | temperature | heat_index | humidity | event_time
 
         try {
-            objectNode = (ObjectNode) MAPPER.readTree(rawMessage);
-            Telemetry telemetry = MAPPER.treeToValue(objectNode, Telemetry.class);
+            Telemetry telemetry = MAPPER.readValue(rawMessage, Telemetry.class);
 
-            values = new LinkedHashMap<>();
+            Map<String, Object> values = new LinkedHashMap<>();
             values.put(TelemetryTable.COL_DEVICE_ID, telemetry.getDeviceId());
             values.put(TelemetryTable.COL_TEMPERATURE, telemetry.getTemperature());
             values.put(TelemetryTable.COL_HEAT_INDEX, telemetry.getHeatIndex());
@@ -65,10 +66,37 @@ public class KafkaConsumer {
             values.put(TelemetryTable.COL_TIMESTAMP, Timestamp.from(telemetry.getTimestamp()));
 
             log.info(MAPPER.writeValueAsString(values));
+            return values;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to extract telemetry", e);
         }
+    }
 
-        return values;
+    private Map<String, Object> extractDlq(String dlqMessage) {
+    /*
+    {
+      "timestamp": "2026-01-08T11:00:00Z",
+      "dlqType": "INVALID_JSON",
+      "source": "MQTT",
+      "rawMessage": "{bad json payload}",
+      "errorMessage": "Unexpected character ..."
+    }
+    */
+
+        try {
+            Dlq dlq = MAPPER.readValue(dlqMessage, Dlq.class);
+
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put(DlqTable.COL_DLQ_TYPE, dlq.getDlqType());
+            values.put(DlqTable.COL_SOURCE, dlq.getSource());
+            values.put(DlqTable.COL_RAW_MESSAGE, dlq.getRawMessage());
+            values.put(DlqTable.COL_ERROR_MESSAGE, dlq.getErrorMessage());
+            values.put(DlqTable.COL_EVENT_TIME, Timestamp.from(dlq.getTimestamp()));
+
+            log.info(MAPPER.writeValueAsString(values));
+            return values;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract DLQ message", e);
+        }
     }
 }
