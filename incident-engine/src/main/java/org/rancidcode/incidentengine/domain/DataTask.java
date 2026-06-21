@@ -8,6 +8,7 @@ import org.rancidcode.incidentengine.infra.db.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -72,5 +73,18 @@ public class DataTask {
         if (lastDataTimeDlq > lastDataTimeRaw) return true;
 
         return false;
+    }
+
+    public int closeIncident(JdbcTemplate jdbcTemplate) {
+        String sql = "UPDATE " + IncidentTable.TABLE +
+                " SET " + IncidentTable.COL_STATUS + " = ?, " +
+                IncidentTable.COL_CLOSE_TIME + " = ? " +
+                "WHERE " + IncidentTable.COL_ID + " = (" +
+                "SELECT MAX(" + IncidentTable.COL_ID + ") " +
+                "FROM " + IncidentTable.TABLE +
+                " WHERE " + IncidentTable.COL_STATUS + " = ?)";
+
+        return jdbcTemplate.update(sql, "CLOSED", Timestamp.from(Instant.now()), "OPEN"
+        );
     }
 }

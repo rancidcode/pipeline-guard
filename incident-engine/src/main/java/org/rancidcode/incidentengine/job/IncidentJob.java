@@ -36,16 +36,28 @@ public class IncidentJob {
     public void scheduleIncidentChecker() {
         log.info("schedule");
 
+        String errorType = "";
+
+        openIncident(errorType);
+        //if no issue, but last issue is open, then need to close
+        closeIncident(errorType);
+    }
+
+    private void openIncident(String errorType) {
         if (dataTask.dataStopped(jdbcIncident) && !dataTask.isLastIncidentOpen(jdbcIncident)) {
-            String errorType = IncidentType.NK.name();
 
             if (!kafkaConnectivityChecker.isKafkaReachable()) errorType = IncidentType.KAFKA_DISCONNECTED.name();
             else if (!dataTask.isMqttConnnected(jdbcTelemetry)) errorType = IncidentType.MQTT_DISCONNECTED.name();
             else if (dataTask.dataDlq(jdbcTelemetry)) errorType = IncidentType.INVALID_DATA.name();
             else errorType = IncidentType.DEVICE_OFFLINE.name();
+            //not yet completed for DEVICE_ERROR when to write
 
             insertIncident(errorType, "", "OPEN", Instant.now(), null);
         }
+    }
+
+    private void closeIncident(String errorType) {
+        if (errorType.isEmpty()) dataTask.closeIncident(jdbcIncident);
     }
 
     private void insertIncident(String errorType, String source, String status, Instant open, Instant closed) {
@@ -54,10 +66,12 @@ public class IncidentJob {
         Map<String, Object> values = null;
 
         values = new LinkedHashMap<>();
-        values.put(IncidentTable.COL_ERROR_TYPE, "");
-        values.put(IncidentTable.COL_SOURCE, "");
-        values.put(IncidentTable.COL_STATUS, "");
-        values.put(IncidentTable.COL_OPEN_TIME, "");
-        values.put(IncidentTable.COL_CLOSE_TIME, "");
+        values.put(IncidentTable.COL_ERROR_TYPE, errorType);
+        values.put(IncidentTable.COL_SOURCE, source);
+        values.put(IncidentTable.COL_STATUS, status);
+        values.put(IncidentTable.COL_OPEN_TIME, open);
+        values.put(IncidentTable.COL_CLOSE_TIME, closed);
+
+        dataTask.insertData(jdbcIncident, IncidentTable.TABLE, values);
     }
 }
