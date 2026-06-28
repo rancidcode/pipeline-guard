@@ -10,3 +10,14 @@ public final class TelemetryTable {
     public static final String COL_HUMIDITY = "humidity";
     public static final String COL_TIMESTAMP = "timestamp";
 }
+
+/*
+CREATE TABLE telemetry (
+    id BIGSERIAL PRIMARY KEY,
+    device_id VARCHAR(50) NOT NULL,
+    temperature DOUBLE PRECISION NOT NULL,
+    heat_index DOUBLE PRECISION NOT NULL,
+    humidity DOUBLE PRECISION NOT NULL,
+    "timestamp" TIMESTAMPTZ NOT NULL
+);
+ */

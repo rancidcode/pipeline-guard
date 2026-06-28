@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.rancidcode.incidentengine.domain.DataTask;
 import org.rancidcode.incidentengine.dto.Dlq;
 import org.rancidcode.incidentengine.dto.Telemetry;
+import org.rancidcode.incidentengine.dto.TelemetryAggregate;
+import org.rancidcode.incidentengine.infra.db.AggregateTable;
 import org.rancidcode.incidentengine.infra.db.DlqTable;
 import org.rancidcode.incidentengine.infra.db.TelemetryTable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,10 +14,10 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.node.ObjectNode;
 
 import javax.sql.DataSource;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -36,6 +38,8 @@ public class KafkaConsumer {
     @KafkaListener(topics = "${kafka.topic.1m}", groupId = "${kafka.group.avg}")
     public void processAvg(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         log.info("Topic : {}, message : {}", topic, message);
+
+        dataTask.insertData(jdbcTemplate, AggregateTable.TABLE, extractAgg(message, "1m"));
     }
 
     @KafkaListener(topics = "${kafka.topic.dlq}", groupId = "${kafka.group.dlq}")
@@ -97,6 +101,45 @@ public class KafkaConsumer {
             return values;
         } catch (Exception e) {
             throw new RuntimeException("Failed to extract DLQ message", e);
+        }
+    }
+
+    private Map<String, Object> extractAgg(String aggMessage, String window) {
+    /*
+    {
+  "count": 1,
+  "sumTemperature": 33.0,
+  "sumHumidity": 75.1,
+  "sumHeatIndex": 45.76314,
+
+  "startTime": "2026-06-15T13:36:07Z",
+  "endTime": "2026-06-15T13:36:07Z",
+
+  "avgTemperature": 33.0,
+  "avgHeatIndex": 45.76314,
+  "avgHumidity": 75.1
+}
+     */
+
+        try {
+            TelemetryAggregate agg = MAPPER.readValue(aggMessage, TelemetryAggregate.class);
+
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put(AggregateTable.COL_COUNT, agg.getCount());
+            values.put(AggregateTable.COL_SUM_TEMPERATURE, agg.getSumTemperature());
+            values.put(AggregateTable.COL_SUM_HEAT_INDEX, agg.getSumHeatIndex());
+            values.put(AggregateTable.COL_SUM_HUMIDITY, agg.getSumHumidity());
+            values.put(AggregateTable.COL_START, Timestamp.from(agg.getStartTime()));
+            values.put(AggregateTable.COL_END, Timestamp.from(agg.getEndTime()));
+            values.put(AggregateTable.COL_AVG_TEMPERATURE, agg.getAvgTemperature());
+            values.put(AggregateTable.COL_AVG_HEAT_INDEX, agg.getAvgHeatIndex());
+            values.put(AggregateTable.COL_AVG_HUMIDITY, agg.getAvgHumidity());
+            values.put(AggregateTable.COL_AGG_WINDOW, window);
+
+            log.info(MAPPER.writeValueAsString(values));
+            return values;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract Aggregate message", e);
         }
     }
 }

@@ -10,3 +10,14 @@ public class DlqTable {
     public static final String COL_RAW_MESSAGE = "raw_message";
     public static final String COL_ERROR_MESSAGE = "error_message";
 }
+
+/*
+CREATE TABLE dlq (
+    id BIGSERIAL PRIMARY KEY,
+    dlq_type VARCHAR(50) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    "timestamp" TIMESTAMPTZ NOT NULL,
+    raw_message TEXT,
+    error_message TEXT
+);
+ */

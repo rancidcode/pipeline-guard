@@ -12,3 +12,14 @@ public final class IncidentTable {
     public static final String COL_OPEN_TIME = "open_time";
     public static final String COL_CLOSE_TIME = "close_time";
 }
+
+/*
+CREATE TABLE incident (
+    id BIGSERIAL PRIMARY KEY,
+    error_type VARCHAR(255) NOT NULL,
+    source VARCHAR(255) NOT NULL,
+    status VARCHAR(255) NOT NULL,
+    open_time VARCHAR(255) NOT NULL,
+    close_time VARCHAR(255)
+);
+ */

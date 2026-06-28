@@ -9,3 +9,13 @@ public class MqttStatusTable {
     public static final String COL_SOURCE = "source";
     public static final String COL_EVENT_TIME = "event_time";
 }
+
+/*
+CREATE TABLE mqtt_status (
+    id BIGSERIAL PRIMARY KEY,
+    event_type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    event_time TIMESTAMPTZ NOT NULL
+);
+ */
