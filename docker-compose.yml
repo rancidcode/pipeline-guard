@@ -24,7 +24,10 @@ services:
     env_file:
       - ./telemetry-collector/.env
     depends_on:
-      - kafka
+      kafka:
+        condition: service_started
+      incident-engine:
+        condition: service_healthy
 
   aggregator:
     build: ./telemetry-aggregator
@@ -39,3 +42,7 @@ services:
       - ./incident-engine/.env
     depends_on:
       - kafka
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 5s
+      retries: 10
