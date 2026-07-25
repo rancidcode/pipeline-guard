@@ -3,17 +3,17 @@ package org.rancidcode.telemetrycollector.dto;
 import java.time.Instant;
 
 public class MqttStatus {
-    private String type;
+    private String eventType;
     private String status;
-    private Instant at;
+    private Instant eventTime;
     private String source;
 
-    public String getType() {
-        return type;
+    public String getEventType() {
+        return eventType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setEventType(String type) {
+        this.eventType = type;
     }
 
     public String getStatus() {
@@ -24,12 +24,12 @@ public class MqttStatus {
         this.status = status;
     }
 
-    public Instant getAt() {
-        return at;
+    public Instant getEventTime() {
+        return eventTime;
     }
 
-    public void setAt(Instant at) {
-        this.at = at;
+    public void setEventTime(Instant eventTime) {
+        this.eventTime = eventTime;
     }
 
     public String getSource() {
