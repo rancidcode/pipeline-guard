@@ -41,7 +41,7 @@ public class DataTask {
     public boolean isLastIncidentOpen(JdbcTemplate jdbcTemplate) {
         List<Incident> list = jdbcTemplate.query("SELECT * FROM " + IncidentTable.TABLE + " ORDER BY " + IncidentTable.COL_ID + " DESC LIMIT 1", DataSchema.incidentRowMapper);
         if (!list.isEmpty()) {
-            if (list.get(0).getStatus().equalsIgnoreCase("CLOSED")) return true;
+            if (list.get(0).getStatus().equalsIgnoreCase("OPEN")) return true;
         }
         return false;
     }

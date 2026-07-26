@@ -2,7 +2,7 @@ package org.rancidcode.incidentengine.infra.db;
 
 public class AggregateTable {
 
-    public static final String TABLE = "telemetry-aggregate";
+    public static final String TABLE = "telemetry_aggregate";
 
     public static final String COL_ID = "id";
     public static final String COL_AGG_WINDOW = "aggregation_window";

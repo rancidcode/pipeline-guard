@@ -7,8 +7,15 @@ import org.rancidcode.incidentengine.dto.Telemetry;
 import org.springframework.jdbc.core.RowMapper;
 import tools.jackson.databind.ObjectMapper;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+
 public final class DataSchema {
     public static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private static Instant toInstant(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant();
+    }
 
     private DataSchema() {
     }
@@ -26,7 +33,7 @@ public final class DataSchema {
             rs.getString(IncidentTable.COL_SOURCE),
             rs.getString(IncidentTable.COL_STATUS),
             rs.getTimestamp(IncidentTable.COL_OPEN_TIME).toInstant(),
-            rs.getTimestamp(IncidentTable.COL_CLOSE_TIME).toInstant()
+            toInstant(rs.getTimestamp(IncidentTable.COL_CLOSE_TIME))
     );
 
     public static final RowMapper<MqttStatus> mqttStatusRowMapper = (rs, i) -> new MqttStatus(

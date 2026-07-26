@@ -16,12 +16,12 @@ spring:
 
   datasource:
     incident:
-      url: jdbc:postgresql://localhost:${DB_PORT}/${DB_INCIDENT_NAME}
+      url: jdbc:postgresql://host.docker.internal:${DB_PORT}/${DB_INCIDENT_NAME}
       username: ${DB_USER}
       password: ${DB_PASS}
       driver-class-name: org.postgresql.Driver
     telemetry:
-      url: jdbc:postgresql://localhost:${DB_PORT}/${DB_TELEMETRY_NAME}
+      url: jdbc:postgresql://host.docker.internal:${DB_PORT}/${DB_TELEMETRY_NAME}
       username: ${DB_USER}
       password: ${DB_PASS}
       driver-class-name: org.postgresql.Driver

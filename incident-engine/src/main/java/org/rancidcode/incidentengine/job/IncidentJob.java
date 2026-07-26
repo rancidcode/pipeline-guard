@@ -6,6 +6,7 @@ import org.rancidcode.incidentengine.domain.enums.IncidentType;
 import org.rancidcode.incidentengine.infra.db.IncidentTable;
 import org.rancidcode.incidentengine.monitoring.pipeline.KafkaConnectivityChecker;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 import javax.sql.DataSource;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,6 +28,9 @@ public class IncidentJob {
     private final KafkaConnectivityChecker kafkaConnectivityChecker;
     private final DataTask dataTask = new DataTask();
 
+    @Value(value = "${spring.application.name}")
+    private String applicationName;
+
     public IncidentJob(@Qualifier("telemetryDataSource") DataSource telemetryDataSource, @Qualifier("incidentDataSource") DataSource incidentDataSource, KafkaConnectivityChecker kafkaConnectivityChecker) {
         this.jdbcIncident = new JdbcTemplate(incidentDataSource);
         this.jdbcTelemetry = new JdbcTemplate(telemetryDataSource);
@@ -34,10 +39,12 @@ public class IncidentJob {
 
     @Scheduled(cron = "${schedulers.incidentChecker.cron}")
     public void scheduleIncidentChecker() {
-        log.info("schedule");
+        log.info("scheduler is running ...");
 
-        boolean dataStopped = dataTask.dataStopped(jdbcIncident);
+        boolean dataStopped = dataTask.dataStopped(jdbcTelemetry);
         boolean isLastIncidentOpen = dataTask.isLastIncidentOpen(jdbcIncident);
+
+        log.info("Data stopped: {}, Last Incident Open: {}", dataStopped, isLastIncidentOpen);
 
         if (dataStopped && !isLastIncidentOpen) {
             openIncident();
@@ -49,20 +56,28 @@ public class IncidentJob {
     private void openIncident() {
         String errorType = "";
 
-        if (!kafkaConnectivityChecker.isKafkaReachable()) errorType = IncidentType.KAFKA_DISCONNECTED.name();
-        else if (!dataTask.isMqttConnnected(jdbcTelemetry)) errorType = IncidentType.MQTT_DISCONNECTED.name();
-        else if (dataTask.dataDlq(jdbcTelemetry)) errorType = IncidentType.INVALID_DATA.name();
+        boolean isKafkaReachable = kafkaConnectivityChecker.isKafkaReachable();
+        boolean isMqttConnected = dataTask.isMqttConnnected(jdbcIncident);
+        boolean dlqFound = dataTask.dataDlq(jdbcTelemetry);
+
+        log.info("Connection details - Kafka: {}, Mqtt: {}, dlq: {}", !isKafkaReachable, !isMqttConnected, dlqFound);
+
+        if (!isKafkaReachable) errorType = IncidentType.KAFKA_DISCONNECTED.name();
+        else if (!isMqttConnected) errorType = IncidentType.MQTT_DISCONNECTED.name();
+        else if (dlqFound) errorType = IncidentType.INVALID_DATA.name();
         else errorType = IncidentType.DEVICE_OFFLINE.name();
         //not yet completed for DEVICE_ERROR when to write
 
-        insertIncident(errorType, "", "OPEN", Instant.now(), null);
+        log.info("Error found: " + errorType);
+
+        insertIncident(errorType, applicationName, "OPEN", Timestamp.from(Instant.now()), null);
     }
 
     private void closeIncident() {
         dataTask.closeIncident(jdbcIncident);
     }
 
-    private void insertIncident(String errorType, String source, String status, Instant open, Instant closed) {
+    private void insertIncident(String errorType, String source, String status, Timestamp open, Instant closed) {
         //id | error_type | source | status | open_time | close_time
         ObjectNode objectNode = null;
         Map<String, Object> values = null;
