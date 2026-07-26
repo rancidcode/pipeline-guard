@@ -1,143 +1,76 @@
 # Pipeline Guard
 
-Pipeline Guard is an event-driven IoT telemetry processing platform built with Spring Boot, Apache Kafka, Docker, and AWS.
+Event-driven IoT telemetry processing and incident monitoring platform.
 
-## Overview
-
-The system collects telemetry data from IoT devices through MQTT, validates incoming messages, and processes telemetry streams using Apache Kafka and Kafka Streams.
-
-## Current Architecture
+## Architecture
 
 ```text
-Device
-  ↓
-EMQX Cloud
-  ↓
-Telemetry Collector
-  ↓
-Apache Kafka (telemetry.raw)
-  ↓
-Telemetry Aggregator (Kafka Streams)
-  ├── telemetry.avg.1m
-  └── telemetry.avg.2m
+                    IoT Device
+                        │
+                      MQTT
+                        ▼
+                   EMQX Cloud
+                        │
+                        ▼
+               Telemetry Collector
+                 │            │
+                 │            └── MQTT Status
+                 │                (Webhook)
+                 ▼                    │
+              Apache Kafka            │
+                 │                    │
+          ┌──────┴──────┐             │
+          ▼             ▼             │
+   telemetry.raw   telemetry.dlq      │
+          │             │             │
+     ┌────┴────┐        │             │
+     │         │        │             │
+     ▼         │        │             │
+  Telemetry    │        │             │
+  Aggregator   │        │             │
+(Kafka Streams)│        │             │
+     │         │        │             │
+  ┌──┴──┐      │        │             │
+  ▼     ▼      │        │             │
+avg.1m avg.2m  │        │             │
+  │     │      │        │             │
+  └──┬──┘      │        │             │
+     │         │        │             │
+     └─────────┴────────┴─────────────┘
+                        │
+                        ▼
+          ┌─────────────────────────────┐
+          │       Incident Engine       │
+          │                             │
+          │ • Monitor raw + 1m/2m avg   │
+          │ • Monitor Kafka, MQTT,      │
+          │   devices & DLQ             │
+          │ • Persist telemetry &       │
+          │   incidents                 │
+          │ • Create & resolve incidents│
+          └──────────────┬──────────────┘
+                         │
+                         ▼
+                    PostgreSQL
 ```
+
+## Applications
+
+**Telemetry Collector**  
+Receives and validates MQTT telemetry, publishes events to Kafka, routes invalid data to DLQ, and reports MQTT connection status via webhook.
+
+**Telemetry Aggregator**  
+Processes raw telemetry using Kafka Streams and produces 1-minute and 2-minute telemetry aggregations.
+
+**Incident Engine**  
+Monitors telemetry and pipeline health, detects operational issues, manages incidents, and persists telemetry and incident data to PostgreSQL.
 
 ## Tech Stack
 
-* Java 17
-* Spring Boot
-* Apache Kafka 4.0 (KRaft Mode)
-* Kafka Streams
-* MQTT (EMQX Cloud)
-* Docker
-* Docker Compose
-* AWS EC2
-* GitHub
+Java 17 · Spring Boot · Apache Kafka 4.0 (KRaft) · Kafka Streams · MQTT · PostgreSQL · Docker · Docker Compose · AWS EC2
 
-## Components
+## Status
 
-### Telemetry Collector
+Core telemetry processing and incident monitoring platform completed and deployed on AWS EC2.
 
-Responsibilities:
-
-* Subscribe to MQTT topics
-* Receive telemetry data from devices
-* Validate incoming telemetry payloads
-* Publish raw telemetry events to Kafka
-
-### Apache Kafka
-
-Responsibilities:
-
-* Store telemetry events
-* Decouple producers and consumers
-* Provide reliable event streaming between services
-
-### Telemetry Aggregator
-
-Responsibilities:
-
-* Consume telemetry events from `telemetry.raw`
-* Perform windowed aggregations using Kafka Streams
-* Calculate averages and counts
-* Publish aggregated results to:
-
-  * `telemetry.avg.1m`
-  * `telemetry.avg.2m`
-
-## Deployment
-
-Current deployment environment:
-
-* AWS EC2 (Ubuntu)
-* Docker Compose
-
-Running services:
-
-* telemetry-collector
-* telemetry-aggregator
-* kafka
-
-## Progress
-
-### Completed
-
-* MQTT integration with EMQX Cloud
-* Telemetry ingestion pipeline
-* Kafka producer integration
-* Kafka consumer integration
-* Kafka Streams integration
-* 1-minute window aggregation
-* 2-minute window aggregation
-* RocksDB state stores
-* Docker containerization
-* Docker Compose orchestration
-* Kafka 4.0 KRaft deployment
-* EC2 deployment
-* End-to-end telemetry processing validation
-
-### In Progress
-
-* PostgreSQL integration
-* Aggregated data persistence
-
-### Planned
-
-* Incident Service
-* Alerting workflow
-* Monitoring and observability
-* REST API for querying aggregated metrics
-
-## Future Architecture
-
-```text
-Device
-  ↓
-EMQX Cloud
-  ↓
-Telemetry Collector
-  ↓
-Apache Kafka
-  ↓
-Telemetry Aggregator
-  ↓
-PostgreSQL
-  ↓
-Incident Service
-```
-
-## Learning Objectives
-
-This project is used to explore:
-
-* Event-driven architecture
-* Distributed systems
-* Apache Kafka & Kafka Streams
-* Stateful stream processing
-* Spring Boot microservices
-* Docker-based deployment
-* Cloud infrastructure on AWS
-
-## Author
-
-Personal backend engineering project focused on building production-style data pipelines and cloud-native services.
+**Next:** Monitoring, observability, and alerting.
