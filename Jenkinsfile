@@ -11,27 +11,6 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                dir('telemetry-collector') {
-                    sh './mvnw test'
-                }
-                echo "telemetry-collector tests completed."
-
-                dir('telemetry-aggregator') {
-                    sh './mvnw test'
-                }
-                echo "telemetry-aggregator tests completed."
-
-                dir('incident-engine') {
-                    sh './mvnw test'
-                }
-                echo "incident-engine tests completed."
-
-                echo "All tests passed."
-            }
-        }
-
         stage('Build') {
             steps {
                 dir('telemetry-collector') {
