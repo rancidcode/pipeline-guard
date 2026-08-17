@@ -20,11 +20,6 @@ spring:
       username: ${DB_USER}
       password: ${DB_PASS}
       driver-class-name: org.postgresql.Driver
-    telemetry:
-      url: jdbc:postgresql://host.docker.internal:${DB_PORT}/${DB_TELEMETRY_NAME}
-      username: ${DB_USER}
-      password: ${DB_PASS}
-      driver-class-name: org.postgresql.Driver
 
 server:
   port: 8082

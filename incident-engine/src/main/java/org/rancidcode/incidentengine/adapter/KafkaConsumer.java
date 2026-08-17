@@ -31,8 +31,8 @@ public class KafkaConsumer {
     private final DataTask dataTask = new DataTask();
 
 
-    public KafkaConsumer(@Qualifier("telemetryDataSource") DataSource telemetryDataSource) {
-        this.jdbcTemplate = new JdbcTemplate(telemetryDataSource);
+    public KafkaConsumer(@Qualifier("incidentDataSource") DataSource incidentDataSource) {
+        this.jdbcTemplate = new JdbcTemplate(incidentDataSource);
     }
 
     @KafkaListener(topics = "${kafka.topic.1m}", groupId = "${kafka.group.avg}")

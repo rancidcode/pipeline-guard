@@ -23,7 +23,7 @@ import java.util.Map;
 @Component
 public class IncidentJob {
 
-    private final JdbcTemplate jdbcTelemetry;
+    //private final JdbcTemplate jdbcTelemetry;
     private final JdbcTemplate jdbcIncident;
     private final KafkaConnectivityChecker kafkaConnectivityChecker;
     private final DataTask dataTask = new DataTask();
@@ -31,9 +31,10 @@ public class IncidentJob {
     @Value(value = "${spring.application.name}")
     private String applicationName;
 
-    public IncidentJob(@Qualifier("telemetryDataSource") DataSource telemetryDataSource, @Qualifier("incidentDataSource") DataSource incidentDataSource, KafkaConnectivityChecker kafkaConnectivityChecker) {
+    //public IncidentJob(@Qualifier("incidentDataSource") DataSource telemetryDataSource, @Qualifier("incidentDataSource") DataSource incidentDataSource, KafkaConnectivityChecker kafkaConnectivityChecker) {
+    public IncidentJob(@Qualifier("incidentDataSource") DataSource incidentDataSource, KafkaConnectivityChecker kafkaConnectivityChecker) {
         this.jdbcIncident = new JdbcTemplate(incidentDataSource);
-        this.jdbcTelemetry = new JdbcTemplate(telemetryDataSource);
+        //this.jdbcTelemetry = new JdbcTemplate(telemetryDataSource);
         this.kafkaConnectivityChecker = kafkaConnectivityChecker;
     }
 
@@ -41,7 +42,8 @@ public class IncidentJob {
     public void scheduleIncidentChecker() {
         log.info("scheduler is running ...");
 
-        boolean dataStopped = dataTask.dataStopped(jdbcTelemetry);
+        //boolean dataStopped = dataTask.dataStopped(jdbcTelemetry);
+        boolean dataStopped = dataTask.dataStopped(jdbcIncident);
         boolean isLastIncidentOpen = dataTask.isLastIncidentOpen(jdbcIncident);
 
         log.info("Data stopped: {}, Last Incident Open: {}", dataStopped, isLastIncidentOpen);
@@ -58,7 +60,7 @@ public class IncidentJob {
 
         boolean isKafkaReachable = kafkaConnectivityChecker.isKafkaReachable();
         boolean isMqttConnected = dataTask.isMqttConnnected(jdbcIncident);
-        boolean dlqFound = dataTask.dataDlq(jdbcTelemetry);
+        boolean dlqFound = dataTask.dataDlq(jdbcIncident);
 
         log.info("Connection details - Kafka: {}, Mqtt: {}, dlq: {}", !isKafkaReachable, !isMqttConnected, dlqFound);
 

@@ -18,12 +18,13 @@ public class DataSourceConfig {
     public DataSourceProperties incidentDataSourceProperties() {
         return new DataSourceProperties();
     }
-
+    /*
     @Bean
     @ConfigurationProperties("spring.datasource.telemetry")
     public DataSourceProperties telemetryDataSourceProperties() {
         return new DataSourceProperties();
     }
+    */
 
     @Bean
     @Primary
@@ -33,10 +34,12 @@ public class DataSourceConfig {
                 .build();
     }
 
+    /*
     @Bean
     public DataSource telemetryDataSource() {
         return telemetryDataSourceProperties()
                 .initializeDataSourceBuilder()
                 .build();
     }
+     */
 }
