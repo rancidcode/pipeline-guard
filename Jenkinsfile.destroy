@@ -8,18 +8,10 @@ pipeline {
             }
         }
 
-        stage('Prepare Environment') {
-            steps {
-                sh 'touch telemetry-collector/.env'
-                sh 'touch telemetry-aggregator/.env'
-                sh 'touch incident-engine/.env'
-            }
-        }
-
         stage('Destroy') {
             steps {
                 echo "Stopping containers and removing volumes..."
-                sh 'docker compose down -v'
+                sh 'docker compose -p pipeline-deploy down -v'
             }
         }
     }
