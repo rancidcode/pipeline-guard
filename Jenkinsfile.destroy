@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Destroy') {
+            steps {
+                echo "Stopping containers and removing volumes..."
+                sh 'docker compose down -v'
+            }
+        }
+    }
+}
