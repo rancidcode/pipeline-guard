@@ -44,6 +44,19 @@ pipeline {
             }
         }
 
+       stage('Prepare Environment') {
+           steps {
+               sh 'cp /var/jenkins_home/deployment/.env-collector telemetry-collector/.env'
+               echo "telemetry-collector .env copied"
+
+               sh 'cp /var/jenkins_home/deployment/.env-aggregator telemetry-aggregator/.env'
+               echo "telemetry-aggregator .env copied"
+
+               sh 'cp /var/jenkins_home/deployment/.env-engine incident-engine/.env'
+               echo "incident-engine .env copied"
+           }
+       }
+
         stage('Deploy') {
             steps {
                 echo "Stopping existing containers and removing volumes..."
